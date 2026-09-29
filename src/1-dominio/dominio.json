@@ -1,0 +1,73 @@
+{
+  "version": "1.0.0",
+  "descripcion": "Reglas de negocio de la legalización de gastos de tarjetas corporativas (Emobility, Fase 1). Fuente única: SharePoint, Power Automate y Excel se derivan de este archivo. Ver docs/02-dominio.md.",
+  "caso": {
+    "prefijoId": "LEG",
+    "digitosConsecutivo": 5,
+    "estados": ["Pendiente", "En revisión", "Rechazada", "Aprobada"],
+    "estadoInicial": "Pendiente",
+    "estadoAprobado": "Aprobada",
+    "estadoRechazado": "Rechazada",
+    "estadosAbiertos": ["Pendiente", "En revisión"],
+    "estadosFinales": ["Aprobada", "Rechazada"],
+    "transiciones": {
+      "Pendiente": ["En revisión", "Aprobada", "Rechazada"],
+      "En revisión": ["Pendiente", "Aprobada", "Rechazada"],
+      "Rechazada": [],
+      "Aprobada": []
+    }
+  },
+  "correo": {
+    "formatoAsunto": "Legalización Tarjeta Crédito - Nombre Colaborador",
+    "textoClaveAsunto": "legalizacion tarjeta credito",
+    "separadorNombre": " - "
+  },
+  "documentos": {
+    "factura": {
+      "nombre": "Factura",
+      "obligatorio": true,
+      "extensiones": [".pdf"],
+      "comparaDuplicados": true
+    },
+    "comprobante": {
+      "nombre": "Comprobante quincenal (Excel)",
+      "obligatorio": true,
+      "extensiones": [".xlsx"],
+      "comparaDuplicados": false
+    },
+    "xml": {
+      "nombre": "XML de la factura (CFDI)",
+      "obligatorio": false,
+      "extensiones": [".xml"],
+      "comparaDuplicados": true
+    }
+  },
+  "duplicados": {
+    "diasVentana": 45,
+    "estadosExcluidos": ["Rechazada"]
+  },
+  "carpetas": {
+    "raizPorEstado": {
+      "Pendiente": "Pendientes",
+      "En revisión": "Pendientes",
+      "Aprobada": "Aprobadas",
+      "Rechazada": "Rechazadas"
+    },
+    "caracteresNoPermitidos": ["\"", "*", ":", "<", ">", "?", "/", "\\", "|", "#", "%", "."],
+    "largoMaximoNombre": 60,
+    "nombreSinDato": "Sin_nombre"
+  },
+  "analisis": {
+    "diasAlertaCasoAbierto": 5
+  },
+  "observaciones": {
+    "prefijoNotaInterna": "[Interno]"
+  },
+  "mensajes": {
+    "faltaFactura": "Falta la factura en PDF.",
+    "faltaComprobante": "Falta el comprobante quincenal en Excel (.xlsx).",
+    "archivosNoSoportados": "Estos archivos no se guardaron porque su formato no es válido: {archivos}. Formatos aceptados: {formatos}.",
+    "asuntoSinNombre": "El asunto no trae el nombre del colaborador. Use el formato: Legalización Tarjeta Crédito - Nombre Apellido.",
+    "posibleDuplicado": "[Interno] Posible duplicado de {casos}: mismo remitente y mismo nombre de archivo en los últimos {dias} días."
+  }
+}

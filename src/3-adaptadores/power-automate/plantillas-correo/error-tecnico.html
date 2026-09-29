@@ -1,0 +1,13 @@
+<div style="font-family: Segoe UI, Arial, sans-serif; font-size: 14px; color: #1f1f1f;">
+  <p><b>Error técnico en el flujo {{FLUJO}}.</b> El caso no se terminó de procesar.</p>
+  <table style="border-collapse: collapse; margin: 8px 0;">
+    <tr><td style="padding: 4px 12px 4px 0; color: #595959;">Asunto / caso</td><td style="padding: 4px 0;">{{ASUNTO}}</td></tr>
+    <tr><td style="padding: 4px 12px 4px 0; color: #595959;">Remitente / correo</td><td style="padding: 4px 0;">{{REMITENTE}}</td></tr>
+    <tr><td style="padding: 4px 12px 4px 0; color: #595959;">Fecha</td><td style="padding: 4px 0;">{{FECHA}}</td></tr>
+  </table>
+  <p><a href="{{ENLACE_EJECUCION}}">Abrir la ejecución en Power Automate</a></p>
+  <p>Detalle de la acción que falló:</p>
+  <pre style="white-space: pre-wrap; font-size: 12px; background: #f3f3f3; padding: 8px;">{{DETALLE}}</pre>
+  <p>Qué hacer: revise la ejecución, corrija la causa (permisos, conexión, nombre de carpeta) y, si hace falta,
+  pida al colaborador que reenvíe el correo. El registro del caso, si se creó, quedó marcado con "ERROR TÉCNICO" en Observaciones.</p>
+</div>

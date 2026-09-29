@@ -1,0 +1,867 @@
+<title>Recorrido Legalizaciones TC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Public+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Diseño: expediente de trabajo. Arriba el proceso; al centro el simulador como mesa de trabajo
+   (correo a la izquierda, lo que produce cada herramienta a la derecha); al final, el estado del proyecto. */
+:root {
+  --bg: #F2F5F4; --panel: #FFFFFF; --panel-2: #F7FAF9; --fg: #15201D; --muted: #56655F; --line: #D6DEDB;
+  --accent: #3444B5; --accent-fg: #FFFFFF; --accent-soft: #E6E9FA;
+  --ok: #1B7543; --ok-soft: #E1F3E8; --warn: #8A5700; --warn-soft: #FAEFD8; --bad: #B0261E; --bad-soft: #FAE5E3;
+  --info: #0D6573; --info-soft: #DFF1F3;
+  --papel: #FFFFFF; --papel-line: #CFD6DC;
+  --f-display: "Archivo", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Public Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0E1413; --panel: #162120; --panel-2: #1B2725; --fg: #E1EAE7; --muted: #9AABA5; --line: #2A3835;
+    --accent: #9BA7FF; --accent-fg: #0E1413; --accent-soft: #242A52;
+    --ok: #6BD49A; --ok-soft: #15301F; --warn: #F0BE5D; --warn-soft: #33280E; --bad: #FF9A8D; --bad-soft: #3B1916;
+    --info: #6CCDD9; --info-soft: #0F2F37; --papel: #FFFFFF; --papel-line: #3A4744;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0E1413; --panel: #162120; --panel-2: #1B2725; --fg: #E1EAE7; --muted: #9AABA5; --line: #2A3835;
+  --accent: #9BA7FF; --accent-fg: #0E1413; --accent-soft: #242A52;
+  --ok: #6BD49A; --ok-soft: #15301F; --warn: #F0BE5D; --warn-soft: #33280E; --bad: #FF9A8D; --bad-soft: #3B1916;
+  --info: #6CCDD9; --info-soft: #0F2F37; --papel: #FFFFFF; --papel-line: #3A4744;
+  color-scheme: dark;
+}
+body { background: var(--bg); color: var(--fg); font: 15px/1.55 var(--f-body); }
+.pagina { max-width: 1200px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 72px; display: grid; gap: 56px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -0.01em; }
+h1 { font-size: clamp(2rem, 4.4vw, 3rem); font-weight: 800; line-height: 1.05; }
+h2 { font-size: 1.5rem; font-weight: 700; }
+h3 { font-size: 1.05rem; font-weight: 700; }
+p { margin: 0; }
+a { color: var(--accent); }
+code, .mono { font-family: var(--f-mono); font-size: 0.86em; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.eyebrow { font: 600 12px/1.3 var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lead { max-width: 68ch; color: var(--muted); font-size: 1.05rem; }
+.seccion { display: grid; gap: 18px; }
+.seccion > header { display: grid; gap: 6px; max-width: 76ch; }
+.seccion > header p { color: var(--muted); }
+
+/* Cabecera */
+.cabecera { display: grid; gap: 16px; }
+.medidores { display: flex; flex-wrap: wrap; gap: 12px; }
+.medidor { flex: 1 1 260px; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 8px; min-width: 0; }
+.medidor .cifra { font: 800 1.6rem/1 var(--f-display); font-variant-numeric: tabular-nums; }
+.medidor .barra { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.medidor .barra i { display: block; height: 100%; background: var(--ok); border-radius: 99px; }
+.medidor.pendiente .barra i { background: var(--warn); }
+.medidor .nota { color: var(--muted); font-size: 13px; }
+.indice { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 14px; }
+
+/* Proceso */
+.proceso { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; counter-reset: paso; }
+.proceso li { counter-increment: paso; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 6px; align-content: start; }
+.proceso li::before { content: counter(paso); font: 800 1.35rem/1 var(--f-display); color: var(--accent); }
+.proceso p { font-size: 14px; color: var(--muted); }
+.herramientas { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font: 600 11px/1 var(--f-body); letter-spacing: 0.04em; padding: 4px 7px; border-radius: 6px; background: var(--panel-2); border: 1px solid var(--line); color: var(--fg); }
+.tag.manual { background: var(--warn-soft); border-color: transparent; color: var(--warn); }
+
+/* Simulador */
+.aviso-sim { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 14px; }
+.verif { display: inline-flex; gap: 6px; align-items: center; padding: 6px 10px; border-radius: 8px; background: var(--ok-soft); color: var(--ok); font-weight: 600; font-size: 13px; }
+.verif.mal { background: var(--bad-soft); color: var(--bad); }
+.narracion { background: var(--accent-soft); color: var(--fg); border-radius: 10px; padding: 12px 14px; font-weight: 600; }
+.sim { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 920px) { .sim { grid-template-columns: minmax(0, 1fr); } }
+.correo { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; gap: 14px; }
+.correo h3 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.escenarios { display: flex; flex-wrap: wrap; gap: 6px; }
+.campo { display: grid; gap: 4px; }
+.campo label, fieldset legend { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.02em; }
+input[type="text"], input[type="email"], input[type="datetime-local"], select {
+  font: inherit; font-size: 14px; color: var(--fg); background: var(--panel-2); border: 1px solid var(--line);
+  border-radius: 8px; padding: 8px 10px; width: 100%; min-width: 0; box-sizing: border-box;
+}
+fieldset { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px 12px; margin: 0; display: grid; gap: 6px; }
+.adjunto { display: flex; gap: 8px; align-items: center; font-size: 13px; font-family: var(--f-mono); overflow-wrap: anywhere; }
+.adjunto small { font-family: var(--f-body); color: var(--muted); }
+.fila { display: flex; gap: 8px; flex-wrap: wrap; }
+.fila > * { flex: 1 1 auto; }
+button { font: 600 14px/1 var(--f-body); border-radius: 8px; padding: 9px 12px; cursor: pointer; border: 1px solid var(--line); background: var(--panel-2); color: var(--fg); }
+button:hover { border-color: var(--accent); }
+button.primario { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+button.chico { font-size: 12px; padding: 6px 9px; }
+button:disabled { opacity: 0.55; cursor: not-allowed; }
+.ok-btn { color: var(--ok); } .mal-btn { color: var(--bad); }
+
+.vistas { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; min-width: 0; }
+.pestanas { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; border-bottom: 1px solid var(--line); }
+.pestanas button { border: none; background: transparent; color: var(--muted); padding: 9px 12px; }
+.pestanas button[aria-selected="true"] { background: var(--accent-soft); color: var(--fg); }
+.pestanas .conteo { font-family: var(--f-mono); font-size: 11px; margin-left: 6px; color: var(--muted); }
+.panel { padding: 16px; display: grid; gap: 14px; min-width: 0; }
+.vacio { color: var(--muted); font-size: 14px; }
+
+/* Ejecuciones (historial de Power Automate) */
+details.ejecucion { border: 1px solid var(--line); border-radius: 12px; background: var(--panel-2); }
+details.ejecucion > summary { list-style: none; cursor: pointer; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+details.ejecucion > summary::-webkit-details-marker { display: none; }
+.flujo { font: 700 12px/1 var(--f-mono); padding: 5px 7px; border-radius: 6px; background: var(--accent); color: var(--accent-fg); }
+.ejecucion .titulo { font-weight: 600; min-width: 0; overflow-wrap: anywhere; flex: 1 1 220px; }
+.ejecucion .cuando { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pasos { list-style: none; margin: 0; padding: 4px 14px 14px; display: grid; gap: 8px; }
+.paso { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; align-items: start; }
+.icono { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 12px/1 var(--f-body); }
+.icono.ok { background: var(--ok-soft); color: var(--ok); }
+.icono.aviso { background: var(--warn-soft); color: var(--warn); }
+.icono.omitido { background: var(--line); color: var(--muted); }
+.paso h4 { margin: 0; font: 600 14px/1.3 var(--f-body); }
+.paso h4 .codigo { font-family: var(--f-mono); color: var(--muted); font-weight: 500; margin-right: 6px; }
+.paso dl { margin: 6px 0 0; display: grid; grid-template-columns: minmax(90px, max-content) minmax(0, 1fr); gap: 3px 12px; font-size: 13px; }
+.paso dt { color: var(--muted); }
+.paso dd { margin: 0; overflow-wrap: anywhere; }
+.paso dd.mono { font-family: var(--f-mono); font-size: 12px; }
+
+/* Estados (sellos) */
+.pill { display: inline-block; font: 700 11px/1 var(--f-body); letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 8px; border-radius: 6px; border: 1.5px solid currentColor; white-space: nowrap; }
+.st-pendiente { color: var(--warn); background: var(--warn-soft); }
+.st-revision { color: var(--info); background: var(--info-soft); }
+.st-aprobada { color: var(--ok); background: var(--ok-soft); }
+.st-rechazada { color: var(--bad); background: var(--bad-soft); }
+.st-neutro { color: var(--muted); background: var(--panel-2); }
+
+/* Tablas */
+.tabla { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+th { text-align: left; font-weight: 600; color: var(--muted); background: var(--panel-2); white-space: nowrap; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+td.id { font-family: var(--f-mono); white-space: nowrap; }
+td.num { text-align: right; }
+td .multilinea { white-space: pre-line; min-width: 180px; }
+.acciones { display: flex; flex-wrap: wrap; gap: 6px; min-width: 190px; }
+.rechazo { display: grid; gap: 6px; margin-top: 6px; }
+
+/* Biblioteca */
+.arbol { display: grid; gap: 10px; }
+.carpeta { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.carpeta .ruta { padding: 8px 12px; background: var(--panel-2); font-family: var(--f-mono); font-size: 12px; overflow-wrap: anywhere; }
+.carpeta ul { list-style: none; margin: 0; padding: 8px 12px; display: grid; gap: 4px; font-family: var(--f-mono); font-size: 12px; }
+.carpeta li { overflow-wrap: anywhere; }
+.carpeta li span { color: var(--muted); font-family: var(--f-body); }
+
+/* Correos */
+.mensaje { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.mensaje .sobre { padding: 10px 14px; background: var(--panel-2); display: grid; gap: 2px; font-size: 13px; }
+.mensaje .sobre b { font-weight: 600; }
+.papel { background: var(--papel); border-top: 1px solid var(--papel-line); padding: 14px 16px; color: #1f1f1f; overflow-wrap: anywhere; }
+.papel a { color: #3444B5; }
+
+/* Excel */
+.hoja { display: grid; gap: 8px; }
+.hoja h3 { display: flex; gap: 8px; align-items: center; }
+.hoja h3 .mono { color: var(--muted); font-weight: 500; font-size: 12px; }
+.kpis { display: flex; flex-wrap: wrap; gap: 10px; }
+.kpi { flex: 1 1 130px; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 2px; }
+.kpi b { font: 800 1.4rem/1.1 var(--f-display); font-variant-numeric: tabular-nums; }
+.kpi span { font-size: 12px; color: var(--muted); }
+
+/* Estado del proyecto */
+.hecho { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.hecho article { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 8px; align-content: start; }
+.hecho ul { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 14px; }
+.hecho .prueba { font-size: 13px; color: var(--ok); font-weight: 600; }
+.falta { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; counter-reset: falta; }
+.falta li { counter-increment: falta; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px 14px 56px; position: relative; display: grid; gap: 6px; }
+.falta li::before { content: counter(falta); position: absolute; left: 16px; top: 14px; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font: 800 14px/1 var(--f-display); background: var(--warn-soft); color: var(--warn); }
+.falta .meta { display: flex; flex-wrap: wrap; gap: 6px 10px; font-size: 13px; color: var(--muted); align-items: center; }
+.quien { font: 600 12px/1 var(--f-body); padding: 4px 8px; border-radius: 99px; background: var(--accent-soft); color: var(--fg); }
+.decisiones, .riesgos { margin: 0; padding-left: 18px; display: grid; gap: 6px; max-width: 80ch; }
+.dos { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+.dos > div { display: grid; gap: 10px; align-content: start; min-width: 0; }
+footer { color: var(--muted); font-size: 13px; display: grid; gap: 4px; }
+@media (prefers-reduced-motion: no-preference) {
+  details.ejecucion.nueva { animation: aparecer .35s ease-out; }
+  @keyframes aparecer { from { transform: translateY(-4px); opacity: .6; } to { transform: none; opacity: 1; } }
+}
+</style>
+
+<div class="pagina">
+  <header class="cabecera">
+    <p class="eyebrow">Emobility · Legalización de gastos de tarjetas corporativas · Fase 1</p>
+    <h1>Cómo funciona la solución y qué falta para dejarla lista</h1>
+    <p class="lead">La solución está construida y probada en su equipo. Falta instalarla en el Microsoft 365 de Emobility: eso requiere sus datos, algunos permisos de administrador y armar los dos flujos en Power Automate.</p>
+    <div class="medidores">
+      <div class="medidor">
+        <span class="eyebrow">Construido y probado</span>
+        <span class="cifra">5 de 5 puntos</span>
+        <span class="barra"><i style="width:100%"></i></span>
+        <span class="nota" id="notaPruebas">Pruebas automáticas: todas pasan</span>
+      </div>
+      <div class="medidor pendiente">
+        <span class="eyebrow">Instalado en su Microsoft 365</span>
+        <span class="cifra">0 de 9 pasos</span>
+        <span class="barra"><i style="width:3%"></i></span>
+        <span class="nota">Necesita sus datos, permisos y los flujos. Vea "Qué falta".</span>
+      </div>
+    </div>
+    <nav class="indice" aria-label="Contenido">
+      <a href="#recorrido">El proceso</a><a href="#simulador">Simulador</a><a href="#hecho">Qué está hecho</a><a href="#falta">Qué falta</a><a href="#riesgos">Qué se comprueba en su tenant</a>
+    </nav>
+  </header>
+
+  <section class="seccion" id="recorrido">
+    <header>
+      <h2>El proceso, de punta a punta</h2>
+      <p>Los 8 pasos acordados y la herramienta que hace cada uno. Power Automate solo mueve la información; aprobar y cargar en Operam siguen siendo decisiones de una persona.</p>
+    </header>
+    <ol class="proceso">
+      <li><h3>El colaborador envía el correo</h3><p>Asunto "Legalización Tarjeta Crédito - Nombre", con la factura en PDF, el Excel quincenal y, si lo tiene, el XML.</p><div class="herramientas"><span class="tag">Outlook</span></div></li>
+      <li><h3>LEG-01 detecta el correo</h3><p>Revisa el asunto sin importar tildes ni mayúsculas. Procesa un correo a la vez.</p><div class="herramientas"><span class="tag">Power Automate</span></div></li>
+      <li><h3>Guarda los adjuntos</h3><p>En <code>Pendientes/AAAA/MM/Colaborador</code>, con el ID del caso al inicio del nombre.</p><div class="herramientas"><span class="tag">SharePoint · biblioteca</span></div></li>
+      <li><h3>Registra el caso</h3><p>Un elemento por correo, con estado Pendiente y un ID único <code>LEG-AAAAMM-NNNNN</code>.</p><div class="herramientas"><span class="tag">SharePoint · lista</span></div></li>
+      <li><h3>Valida</h3><p>Que estén la factura y el comprobante, que los formatos sean válidos y si puede ser un duplicado.</p><div class="herramientas"><span class="tag">Power Automate</span></div></li>
+      <li><h3>Avisa</h3><p>Al colaborador: completa o qué falta. A Contabilidad: posible duplicado (aviso interno).</p><div class="herramientas"><span class="tag">Outlook</span></div></li>
+      <li><h3>Contabilidad decide</h3><p>Aprueba o rechaza en SharePoint. LEG-02 mueve los archivos, registra la Fecha Cierre y avisa.</p><div class="herramientas"><span class="tag manual">Persona</span><span class="tag">SharePoint</span><span class="tag">Power Automate</span></div></li>
+      <li><h3>Consolida y carga</h3><p>Excel reúne los gastos aprobados y marca alertas. Contabilidad los carga en Operam.</p><div class="herramientas"><span class="tag">Excel · Power Query</span><span class="tag manual">Operam, a mano</span></div></li>
+    </ol>
+  </section>
+
+  <section class="seccion" id="simulador">
+    <header>
+      <h2>Pruébelo: simulador del proceso</h2>
+      <p>Envíe un correo de ejemplo y vea lo que haría cada pieza: la ejecución del flujo, el registro y los archivos en SharePoint, los correos que salen y el análisis en Excel. Aplica las mismas reglas de <code>dominio.json</code> y las mismas plantillas de correo del proyecto. Todo es simulado: no se conecta a nada y los datos son de ejemplo.</p>
+    </header>
+    <div class="aviso-sim">
+      <span class="verif" id="verificacion">Verificando reglas…</span>
+      <button type="button" id="btnGuiado" class="primario">Ver recorrido guiado</button>
+      <button type="button" id="btnReiniciar">Vaciar datos de ejemplo</button>
+    </div>
+    <div class="narracion" id="narracion" hidden></div>
+
+    <div class="sim">
+      <form class="correo" id="formCorreo" novalidate>
+        <h3>Correo nuevo <span class="eyebrow">Buzón de legalizaciones</span></h3>
+        <div class="campo">
+          <span class="eyebrow">Escenarios de ejemplo</span>
+          <div class="escenarios" id="escenarios"></div>
+        </div>
+        <div class="campo">
+          <label for="remitente">De</label>
+          <input type="email" id="remitente" autocomplete="off">
+        </div>
+        <div class="campo">
+          <label for="asunto">Asunto</label>
+          <input type="text" id="asunto" autocomplete="off">
+        </div>
+        <div class="fila">
+          <div class="campo">
+            <label for="llegada">Llega (hora local)</label>
+            <input type="datetime-local" id="llegada">
+          </div>
+          <div class="campo">
+            <label for="pais">País</label>
+            <select id="pais"><option value="Mexico">México (UTC−6)</option><option value="Colombia">Colombia (UTC−5)</option></select>
+          </div>
+        </div>
+        <fieldset>
+          <legend>Adjuntos</legend>
+          <div id="listaAdjuntos"></div>
+          <div class="fila">
+            <input type="text" id="otroArchivo" placeholder="Otro archivo, p. ej. factura.jpg" aria-label="Nombre de otro archivo adjunto">
+            <button type="button" id="btnAgregarArchivo" class="chico">Agregar</button>
+          </div>
+        </fieldset>
+        <button type="submit" class="primario">Enviar correo</button>
+      </form>
+
+      <div class="vistas">
+        <div class="pestanas" role="tablist" aria-label="Resultado">
+          <button type="button" role="tab" id="tab-ejecuciones" aria-controls="panel-ejecuciones" aria-selected="true">Power Automate<span class="conteo" id="c-ejecuciones"></span></button>
+          <button type="button" role="tab" id="tab-sharepoint" aria-controls="panel-sharepoint" aria-selected="false">SharePoint<span class="conteo" id="c-sharepoint"></span></button>
+          <button type="button" role="tab" id="tab-correos" aria-controls="panel-correos" aria-selected="false">Correos<span class="conteo" id="c-correos"></span></button>
+          <button type="button" role="tab" id="tab-excel" aria-controls="panel-excel" aria-selected="false">Excel<span class="conteo" id="c-excel"></span></button>
+        </div>
+        <div class="panel" id="panel-ejecuciones" role="tabpanel" aria-labelledby="tab-ejecuciones"></div>
+        <div class="panel" id="panel-sharepoint" role="tabpanel" aria-labelledby="tab-sharepoint" hidden></div>
+        <div class="panel" id="panel-correos" role="tabpanel" aria-labelledby="tab-correos" hidden></div>
+        <div class="panel" id="panel-excel" role="tabpanel" aria-labelledby="tab-excel" hidden></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="seccion" id="hecho">
+    <header>
+      <h2>Qué está hecho</h2>
+      <p>Todo está en la carpeta <code>Legalizaciones-TC-Emobility</code> del escritorio, organizado en capas (dominio, aplicación, adaptadores, infraestructura).</p>
+    </header>
+    <div class="hecho">
+      <article><h3>1 · SharePoint</h3><ul><li>Scripts para registrar la app de Entra ID, crear el sitio, la lista, la biblioteca, las vistas y los permisos, y verificarlo todo.</li><li>Se pueden repetir sin riesgo; nunca borran datos.</li></ul><span class="prueba">41 pruebas con SharePoint simulado + comandos PnP revisados con el módulo real</span></article>
+      <article><h3>2 · Excel</h3><ul><li>Libro de análisis con 18 consultas de Power Query: registro, gastos, alertas, consolidado para Operam y control de cargas.</li><li>Versión de demostración en <code>salida/</code> y generador del libro conectado a su tenant.</li><li>Plantilla del comprobante quincenal para los colaboradores.</li></ul><span class="prueba">18 pruebas que ejecutan Power Query en Excel + 14 en Python</span></article>
+      <article><h3>3 · Power Automate</h3><ul><li>Guías de LEG-01 (recepción) y LEG-02 (cierre): cada acción, con su nombre y su expresión completa.</li><li>Catálogo de expresiones con ejemplos y 6 plantillas de correo.</li></ul><span class="prueba">Pruebas de arquitectura revisan cada expresión, clave y marcador</span></article>
+      <article><h3>4 · Pruebas</h3><ul><li>Plan con 14 escenarios: completa, incompleta, formato no válido, duplicado, 15 correos seguidos, cierres y Excel.</li><li>Archivos de prueba, script que envía los correos y script que revisa el resultado en SharePoint.</li></ul><span class="prueba" id="totalPruebas">Pruebas automáticas: todas pasan</span></article>
+      <article><h3>5 · Documentación</h3><ul><li>Guía de instalación, lista de pendientes, arquitectura, reglas del dominio y casos de uso.</li><li>Manual de Contabilidad, instrucciones para colaboradores y 10 decisiones de arquitectura.</li></ul></article>
+      <article><h3>Herramientas instaladas</h3><ul><li>PowerShell 7.6.6 (portátil, sin permisos de administrador).</li><li>PnP.PowerShell 3.4.1, Pester 6.2.0 y openpyxl 3.1.5.</li></ul></article>
+    </div>
+  </section>
+
+  <section class="seccion" id="falta">
+    <header>
+      <h2>Qué falta para que quede lista</h2>
+      <p>Todo lo que falta ocurre dentro del Microsoft 365 de Emobility, por eso necesita sus datos y permisos. Los pasos van en orden; los tiempos son estimados.</p>
+    </header>
+    <ol class="falta">
+      <li><h3>Completar la configuración</h3><p>En <code>config/Config.Legalizaciones.psd1</code>: prefijo del tenant, correos de TI, Id. del grupo de Contabilidad, cuenta de servicio, buzón, correos de aviso y país.</p><div class="meta"><span class="quien">Usted / TI</span><span>≈ 30 min</span></div></li>
+      <li><h3>Registrar la aplicación de Entra ID</h3><p>Ejecutar <code>00-Registrar-AppEntraID.ps1</code> y aceptar el consentimiento. Es una sola vez por tenant.</p><div class="meta"><span class="quien">Administrador de Entra ID</span><span>≈ 10 min</span></div></li>
+      <li><h3>Crear y verificar SharePoint</h3><p><code>01-Aprovisionar-SharePoint.ps1</code> y luego <code>02-Verificar-SharePoint.ps1</code>, que debe terminar con FALLA: 0.</p><div class="meta"><span class="quien">Administrador de SharePoint</span><span>≈ 30 min</span></div></li>
+      <li><h3>Buzón y cuenta de servicio</h3><p>Buzón compartido de legalizaciones; a la cuenta de servicio, Acceso total, Enviar como y una licencia de Microsoft 365.</p><div class="meta"><span class="quien">Administrador de Exchange / Microsoft 365</span><span>depende del administrador</span></div></li>
+      <li><h3>Generar la configuración de los flujos</h3><p><code>Generar-ConfiguracionFlujos.ps1</code> crea el JSON que se pega en la acción Configuracion de LEG-01 y LEG-02.</p><div class="meta"><span class="quien">TI</span><span>1 min</span></div></li>
+      <li><h3>Construir LEG-01 y LEG-02</h3><p>En Power Automate, con la cuenta de servicio, siguiendo las guías paso a paso. Es lo único que no se puede hacer con un script.</p><div class="meta"><span class="quien">TI</span><span>≈ medio día</span></div></li>
+      <li><h3>Generar y subir el libro de Excel</h3><p><code>Generar-LibroAnalisis.ps1</code> y subir el libro a Documentos del sitio; actualizarlo una vez con su cuenta.</p><div class="meta"><span class="quien">TI</span><span>≈ 30 min</span></div></li>
+      <li><h3>Pruebas de aceptación</h3><p>Escenarios E01 a E14 del plan de pruebas, con el script de envío y el de validación.</p><div class="meta"><span class="quien">TI + Contabilidad</span><span>≈ medio día</span></div></li>
+      <li><h3>Puesta en marcha</h3><p>Enviar la plantilla y las instrucciones a los colaboradores; Contabilidad empieza con su manual.</p><div class="meta"><span class="quien">Contabilidad</span></div></li>
+    </ol>
+    <div class="dos">
+      <div>
+        <h3>Decisiones que conviene confirmar</h3>
+        <ul class="decisiones">
+          <li><b>País:</b> México (se asumió por las facturas CFDI). Colombia está disponible.</li>
+          <li><b>Plantilla del comprobante:</b> es una propuesta. Si Contabilidad usa otro formato, se ajusta la lectura en Excel.</li>
+          <li><b>Aviso al colaborador al aprobar o rechazar:</b> activado.</li>
+          <li><b>Columnas extra del registro</b> (Id del correo, Tiene factura, etc.): desactivadas.</li>
+        </ul>
+      </div>
+      <div id="riesgos">
+        <h3>Qué se comprueba en su tenant</h3>
+        <ul class="riesgos">
+          <li>Que "Crear archivo" cree las carpetas AAAA/MM/Colaborador si no existen (escenario E01).</li>
+          <li>Que "Crear nueva carpeta", "Obtener archivos" y "Mover archivo" funcionen como se espera en LEG-02 (E12 y E13).</li>
+          <li>Que la condición del asunto funcione con el buzón compartido (E01 y E09).</li>
+          <li>Si Excel para la web puede actualizar datos de SharePoint en su tenant. Si no, se actualiza en Excel de escritorio.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span id="pie"></span>
+    <span>Guía completa: README.md · Pendientes: QUE-DEBO-HACER.md · Flujos: src/3-adaptadores/power-automate/</span>
+  </footer>
+</div>
+
+<script>
+"use strict";
+const DOMINIO = /*@@DOMINIO@@*/null;
+const PLANTILLAS = /*@@PLANTILLAS@@*/null;
+const META = /*@@META@@*/null;
+
+// ==DOMINIO-INICIO== Mismas reglas que src/1-dominio/Legalizaciones.Dominio.psm1 y las expresiones de LEG-01/LEG-02.
+const Reglas = (() => {
+  const d = DOMINIO;
+  const pad = (n, w) => String(n).padStart(w, "0");
+  function normalizarAsunto(asunto) {
+    let t = String(asunto ?? "").toLowerCase();
+    for (const [a, b] of [["á", "a"], ["é", "e"], ["í", "i"], ["ó", "o"], ["ú", "u"]]) t = t.split(a).join(b);
+    return t.split("  ").join(" ").split("  ").join(" ");
+  }
+  const esLegalizacion = (asunto) => normalizarAsunto(asunto).includes(d.correo.textoClaveAsunto);
+  function nombreEnAsunto(asunto) {
+    const partes = String(asunto ?? "").trim().split(d.correo.separadorNombre);
+    return partes.length > 1 ? partes[1].trim() : "";
+  }
+  function colaborador(asunto, remitente) {
+    return nombreEnAsunto(asunto) || String(remitente ?? "").trim().toLowerCase().split("@")[0];
+  }
+  const extension = (nombre) => "." + String(nombre).split(".").pop().toLowerCase();
+  function tipoDocumento(nombre) {
+    const ext = extension(nombre);
+    for (const [clave, doc] of Object.entries(d.documentos)) if (doc.extensiones.includes(ext)) return clave;
+    return null;
+  }
+  const extensionesPermitidas = () => Object.values(d.documentos).flatMap((doc) => doc.extensiones);
+  function validar(adjuntos, asunto) {
+    const porTipo = {};
+    for (const clave of Object.keys(d.documentos)) porTipo[clave] = [];
+    const noSoportados = [];
+    for (const nombre of adjuntos) { const t = tipoDocumento(nombre); if (t) porTipo[t].push(nombre); else noSoportados.push(nombre); }
+    const hallazgos = [];
+    let completa = true;
+    for (const [clave, doc] of Object.entries(d.documentos)) {
+      if (doc.obligatorio && porTipo[clave].length === 0) {
+        completa = false;
+        hallazgos.push(clave === "factura" ? d.mensajes.faltaFactura : clave === "comprobante" ? d.mensajes.faltaComprobante : `Falta: ${doc.nombre}.`);
+      }
+    }
+    if (noSoportados.length) hallazgos.push(d.mensajes.archivosNoSoportados.replace("{archivos}", noSoportados.join(", ")).replace("{formatos}", extensionesPermitidas().join(", ")));
+    if (!nombreEnAsunto(asunto)) hallazgos.push(d.mensajes.asuntoSinNombre);
+    const soportados = Object.keys(d.documentos).flatMap((clave) => porTipo[clave]);
+    return { porTipo, noSoportados, soportados, completa, hallazgos };
+  }
+  function carpetaSegura(texto) {
+    let r = String(texto ?? "");
+    for (const c of d.carpetas.caracteresNoPermitidos) r = r.split(c).join("");
+    r = r.trim();
+    if (r.length > d.carpetas.largoMaximoNombre) r = r.substring(0, d.carpetas.largoMaximoNombre);
+    r = r.trim();
+    return r || d.carpetas.nombreSinDato;
+  }
+  // Las fechas "locales" se guardan como Date cuyos campos UTC son la hora local del país.
+  const fechaLocal = (fechaUtc, desfaseHoras) => new Date(fechaUtc.getTime() + desfaseHoras * 3600000);
+  const idLegalizacion = (local, consecutivo) => `${d.caso.prefijoId}-${local.getUTCFullYear()}${pad(local.getUTCMonth() + 1, 2)}-${pad(consecutivo, d.caso.digitosConsecutivo)}`;
+  const rutaCarpeta = (estado, local, colab) => `${d.carpetas.raizPorEstado[estado]}/${local.getUTCFullYear()}/${pad(local.getUTCMonth() + 1, 2)}/${carpetaSegura(colab)}`;
+  const transicionPermitida = (desde, hacia) => desde === hacia || (d.caso.transiciones[desde] || []).includes(hacia);
+  function posiblesDuplicados(nuevos, remitente, fechaUtc, previos) {
+    const comparables = Object.entries(d.documentos).filter(([, doc]) => doc.comparaDuplicados).map(([clave]) => clave);
+    const nombres = nuevos.filter((n) => comparables.includes(tipoDocumento(n))).map((n) => n.toLowerCase());
+    if (!nombres.length) return [];
+    const desde = fechaUtc.getTime() - d.duplicados.diasVentana * 86400000;
+    return previos.filter((c) => c.correo.toLowerCase() === String(remitente).toLowerCase()
+        && c.fechaUtc.getTime() >= desde
+        && !d.duplicados.estadosExcluidos.includes(c.estado)
+        && c.nombreArchivo.toLowerCase().replace(/\r/g, "").split("\n").some((n) => nombres.includes(n)))
+      .map((c) => c.id);
+  }
+  const mensajeDuplicado = (casos) => d.mensajes.posibleDuplicado.replace("{casos}", casos.join(", ")).replace("{dias}", String(d.duplicados.diasVentana));
+  const observacionesParaColaborador = (texto) => String(texto ?? "").split("\n").map((l) => l.trim())
+    .filter((l) => l && !l.startsWith(d.observaciones.prefijoNotaInterna));
+  return { pad, normalizarAsunto, esLegalizacion, nombreEnAsunto, colaborador, extension, tipoDocumento, extensionesPermitidas, validar,
+    carpetaSegura, fechaLocal, idLegalizacion, rutaCarpeta, transicionPermitida, posiblesDuplicados, mensajeDuplicado, observacionesParaColaborador };
+})();
+
+// Ejemplos de pruebas/unitarias/Dominio.Tests.ps1: si el simulador no los reproduce, la página lo dice.
+function verificarReglas() {
+  const R = Reglas, u = (s) => new Date(s);
+  const casos = [
+    ["Legalización Tarjeta Crédito - Ana Pérez", true], ["LEGALIZACIÓN TARJETA CRÉDITO - JUAN DÍAZ", true],
+    ["Legalizacion Tarjeta Credito - Luis Gómez", true], ["RV: Legalización Tarjeta Crédito - Ana Pérez", true],
+    ["Legalización  Tarjeta Crédito - Ana", true], ["Legalización de gastos de septiembre", false],
+    ["Tarjeta Crédito - legalización", false], ["", false]
+  ].map(([a, e]) => [`reconoce "${a}"`, R.esLegalizacion(a), e]);
+  casos.push(...[
+    ["Legalización Tarjeta Crédito - Ana Pérez", "Ana Pérez"], ["RV: Legalización Tarjeta Crédito - Ana María Pérez-Gómez", "Ana María Pérez-Gómez"],
+    ["Legalización Tarjeta Crédito - Ana Pérez - Quincena 1", "Ana Pérez"], ["  Legalización Tarjeta Crédito -   Ana Pérez  ", "Ana Pérez"],
+    ["Legalización Tarjeta Crédito", ""], ["Legalización Tarjeta Crédito - ", ""], ["Legalización Tarjeta Crédito-Ana Pérez", ""]
+  ].map(([a, e]) => [`nombre en "${a}"`, R.nombreEnAsunto(a), e]));
+  casos.push(["colaborador sin nombre en el asunto", R.colaborador("Legalización Tarjeta Crédito", " Ana.Perez@Emobility.com "), "ana.perez"]);
+  casos.push(...[["Factura_123.PDF", "factura"], ["Gastos quincena.xlsx", "comprobante"], ["cfdi.XML", "xml"], ["Gastos.xls", null],
+    ["Gastos.xlsm", null], ["foto_factura.jpg", null], ["archivo", null], ["factura.pdf.exe", null]]
+    .map(([n, e]) => [`tipo de ${n}`, R.tipoDocumento(n), e]));
+  casos.push(...[["Ana Pérez", "Ana Pérez"], ["Ana P.", "Ana P"], ['Juan "El Rápido" Díaz', "Juan El Rápido Díaz"],
+    ["María/José: #1", "MaríaJosé 1"], ["  ???  ", "Sin_nombre"], ["", "Sin_nombre"]]
+    .map(([t, e]) => [`carpeta de "${t}"`, R.carpetaSegura(t), e]));
+  casos.push(["ID 2026-09-15 #123", R.idLegalizacion(new Date(Date.UTC(2026, 8, 15, 10)), 123), "LEG-202609-00123"]);
+  casos.push(["ID 2026-01-02 #7", R.idLegalizacion(new Date(Date.UTC(2026, 0, 2, 8)), 7), "LEG-202601-00007"]);
+  casos.push(["ID #123456", R.idLegalizacion(new Date(Date.UTC(2026, 8, 15, 10)), 123456), "LEG-202609-123456"]);
+  const l = R.fechaLocal(u("2026-09-01T03:30:00Z"), -6);
+  casos.push(["1/sep 03:30 UTC en México", `${l.getUTCFullYear()}-${R.pad(l.getUTCMonth() + 1, 2)}-${R.pad(l.getUTCDate(), 2)} ${R.pad(l.getUTCHours(), 2)}:${R.pad(l.getUTCMinutes(), 2)}`, "2026-08-31 21:30"]);
+  casos.push(["mensaje de formato no válido", R.validar(["factura.jpg", "gastos.xlsx"], "Legalización Tarjeta Crédito - Ana").hallazgos[1],
+    "Estos archivos no se guardaron porque su formato no es válido: factura.jpg. Formatos aceptados: .pdf, .xlsx, .xml."]);
+  const previos = [
+    ["LEG-202609-00001", "ana@emobility.com", "2026-09-10T15:00:00Z", "Pendiente", "factura_001.pdf\ngastos.xlsx"],
+    ["LEG-202609-00002", "ANA@EMOBILITY.COM", "2026-09-12T15:00:00Z", "Aprobada", "FACTURA_001.PDF"],
+    ["LEG-202607-00003", "ana@emobility.com", "2026-07-01T15:00:00Z", "Pendiente", "factura_001.pdf"],
+    ["LEG-202609-00004", "ana@emobility.com", "2026-09-15T15:00:00Z", "Rechazada", "factura_001.pdf"],
+    ["LEG-202609-00005", "luis@emobility.com", "2026-09-15T15:00:00Z", "Pendiente", "factura_001.pdf"],
+    ["LEG-202609-00006", "ana@emobility.com", "2026-09-18T15:00:00Z", "Pendiente", "otra.pdf\ngastos.xlsx"],
+    ["LEG-202609-00007", "ana@emobility.com", "2026-09-18T16:00:00Z", "En revisión", "factura_001.pdf\r\ngastos.xlsx"]
+  ].map(([id, correo, f, estado, nombreArchivo]) => ({ id, correo, fechaUtc: u(f), estado, nombreArchivo }));
+  casos.push(["posibles duplicados", R.posiblesDuplicados(["Factura_001.pdf", "gastos.xlsx"], "ana@emobility.com", u("2026-09-20T15:00:00Z"), previos).join(","),
+    "LEG-202609-00001,LEG-202609-00002,LEG-202609-00007"]);
+  casos.push(["Aprobada no se reabre", R.transicionPermitida("Aprobada", "Pendiente"), false]);
+  casos.push(["Pendiente puede aprobarse", R.transicionPermitida("Pendiente", "Aprobada"), true]);
+  casos.push(["notas internas fuera del correo", R.observacionesParaColaborador("Falta el comprobante.\n[Interno] Posible duplicado de LEG-1\n\nFactura ilegible.").join("|"), "Falta el comprobante.|Factura ilegible."]);
+  const fallas = casos.filter(([, obtenido, esperado]) => obtenido !== esperado);
+  return { total: casos.length, fallas };
+}
+// ==DOMINIO-FIN==
+
+// ---------------------------------------------------------------- Datos del simulador
+const PAISES = { Mexico: { nombre: "México", desfase: -6 }, Colombia: { nombre: "Colombia", desfase: -5 } };
+const LINEAS_QUINCENA = [
+  { fecha: "05/09", factura: "A001", proveedor: "Papelería Moderna SA", concepto: "Material de oficina", subtotal: 1000, iva: 160, total: 1160 },
+  { fecha: "06/09", factura: "A002", proveedor: "Restaurante El Puerto", concepto: "Comida con proveedor", subtotal: 800, iva: 128, total: 928 },
+  { fecha: "07/09", factura: "B100", proveedor: "Aerolínea Nacional", concepto: "Vuelo a Monterrey", subtotal: 3500, iva: 560, total: 4060 }
+];
+const ARCHIVOS = {
+  "factura_A001.pdf": { ayuda: "factura PDF" }, "factura_A002.pdf": { ayuda: "factura PDF" },
+  "Gastos_Quincena.xlsx": { ayuda: "comprobante con la plantilla", lineas: LINEAS_QUINCENA },
+  "cfdi_A001.xml": { ayuda: "XML (CFDI)" }, "factura_foto.png": { ayuda: "foto: no válida" },
+  "Gastos_Antiguo.xls": { ayuda: "Excel antiguo: no válido" },
+  "Gastos_Formato_Libre.xlsx": { ayuda: "Excel sin la plantilla", ilegible: true }
+};
+const ESCENARIOS = [
+  { id: "E01", etiqueta: "Completa", remitente: "ana.perez@ejemplo.com", asunto: "Legalización Tarjeta Crédito - Ana Pérez", adjuntos: ["factura_A001.pdf", "Gastos_Quincena.xlsx"] },
+  { id: "E03", etiqueta: "Sin comprobante", remitente: "luis.gomez@ejemplo.com", asunto: "Legalización Tarjeta Crédito - Luis Gómez", adjuntos: ["factura_A002.pdf"] },
+  { id: "E06", etiqueta: "Factura como foto", remitente: "maria.diaz@ejemplo.com", asunto: "Legalización Tarjeta Crédito - María Díaz", adjuntos: ["factura_foto.png", "Gastos_Quincena.xlsx"] },
+  { id: "E08", etiqueta: "Asunto sin nombre", remitente: "jorge.ruiz@ejemplo.com", asunto: "Legalización Tarjeta Crédito", adjuntos: ["factura_A002.pdf", "Gastos_Quincena.xlsx"] },
+  { id: "E09", etiqueta: "No es legalización", remitente: "ana.perez@ejemplo.com", asunto: "Consulta sobre la tarjeta corporativa", adjuntos: ["factura_A001.pdf"] },
+  { id: "E10", etiqueta: "Reenvío (duplicado)", remitente: "ana.perez@ejemplo.com", asunto: "RV: Legalización Tarjeta Crédito - Ana Pérez", adjuntos: ["factura_A001.pdf", "Gastos_Quincena.xlsx"] },
+  { id: "E14", etiqueta: "Excel sin plantilla", remitente: "carla.mendez@ejemplo.com", asunto: "Legalización Tarjeta Crédito - Carla Méndez", adjuntos: ["factura_A002.pdf", "Gastos_Formato_Libre.xlsx"] }
+];
+const BIBLIOTECA = "/Legalizaciones_TC";
+const CORREO_CONTABILIDAD = "contabilidad@ejemplo.com";
+
+let S;
+function estadoInicial() { return { siguienteId: 101, registro: [], biblioteca: [], control: new Set(), ejecuciones: [], correos: [], adjuntosExtra: [] }; }
+
+// ---------------------------------------------------------------- Utilidades
+const $ = (sel) => document.querySelector(sel);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const P = Reglas.pad;
+const fmt = (local) => `${P(local.getUTCDate(), 2)}/${P(local.getUTCMonth() + 1, 2)}/${local.getUTCFullYear()} ${P(local.getUTCHours(), 2)}:${P(local.getUTCMinutes(), 2)}`;
+const isoZ = (fecha) => fecha.toISOString().replace(/\.\d{3}Z$/, "Z");
+const dinero = (n) => n.toLocaleString("es-MX", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const claseEstado = (e) => ({ "Pendiente": "st-pendiente", "En revisión": "st-revision", "Aprobada": "st-aprobada", "Rechazada": "st-rechazada" }[e] || "st-neutro");
+const sello = (e) => `<span class="pill ${claseEstado(e)}">${esc(e)}</span>`;
+const limpiarArchivo = (n) => { let r = String(n); for (const c of ['"', "*", ":", "<", ">", "?", "/", "\\", "|"]) r = r.split(c).join(""); return r; };
+function plantilla(nombre, valores) {
+  let html = PLANTILLAS[nombre];
+  for (const [clave, valor] of Object.entries(valores)) html = html.split(`{{${clave}}}`).join(valor);
+  return html;
+}
+function ahoraLocal(pais) { return Reglas.fechaLocal(new Date(), PAISES[pais].desfase); }
+function aInput(local) { return `${local.getUTCFullYear()}-${P(local.getUTCMonth() + 1, 2)}-${P(local.getUTCDate(), 2)}T${P(local.getUTCHours(), 2)}:${P(local.getUTCMinutes(), 2)}`; }
+function deInput(valor) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/.exec(valor || "");
+  return m ? new Date(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5])) : null;
+}
+
+// ---------------------------------------------------------------- LEG-01 · Recepción
+function ejecutarLeg01(correo) {
+  const pais = PAISES[correo.pais];
+  const fechaUtc = new Date(correo.llegadaLocal.getTime() - pais.desfase * 3600000);
+  const ejecucion = { flujo: "LEG-01", titulo: correo.asunto || "(sin asunto)", cuando: correo.llegadaLocal, pasos: [], resultado: "", clase: "st-aprobada" };
+  const pasos = ejecucion.pasos;
+  const cumple = Reglas.esLegalizacion(correo.asunto);
+  pasos.push({ codigo: "Disparo", nombre: "Condición del asunto", estado: cumple ? "ok" : "omitido",
+    detalle: [["Asunto normalizado", Reglas.normalizarAsunto(correo.asunto), true], ["Busca", DOMINIO.correo.textoClaveAsunto, true], ["Resultado", cumple ? "Se ejecuta el flujo" : "El flujo no se ejecuta: no es una legalización"]] });
+  if (!cumple) {
+    ejecucion.resultado = "No se ejecutó"; ejecucion.clase = "st-neutro";
+    S.ejecuciones.unshift(ejecucion);
+    return ejecucion;
+  }
+  const asunto = correo.asunto.trim();
+  const remitente = correo.remitente.trim().toLowerCase();
+  const local = correo.llegadaLocal;
+  const nombreAsunto = Reglas.nombreEnAsunto(asunto);
+  const colab = Reglas.colaborador(asunto, remitente);
+  const rutaInicial = `${BIBLIOTECA}/${Reglas.rutaCarpeta(DOMINIO.caso.estadoInicial, local, colab)}`;
+  pasos.push({ codigo: "A", nombre: "Datos del correo", estado: "ok", detalle: [
+    ["Colaborador", nombreAsunto ? `${colab} (del asunto)` : `${colab} (del correo: el asunto no trae el nombre)`],
+    ["Recibido", `${fmt(local)} hora de ${pais.nombre} (${isoZ(fechaUtc)} en UTC)`],
+    ["Carpeta", rutaInicial, true]] });
+
+  const v = Reglas.validar(correo.adjuntos, asunto);
+  pasos.push({ codigo: "B", nombre: "Clasificar adjuntos", estado: v.noSoportados.length ? "aviso" : "ok",
+    detalle: correo.adjuntos.length ? correo.adjuntos.map((n) => [n, Reglas.tipoDocumento(n) ?? "no válido: no se guarda", false]) : [["Adjuntos", "Ninguno"]] });
+  pasos.push({ codigo: "C", nombre: "Validar documentación", estado: v.completa && !v.hallazgos.length ? "ok" : "aviso",
+    detalle: [["Documentación", v.completa ? "Completa" : "Incompleta"], ...v.hallazgos.map((h) => ["Hallazgo", h])] });
+
+  const idElemento = S.siguienteId++;
+  const id = Reglas.idLegalizacion(local, idElemento);
+  pasos.push({ codigo: "D", nombre: "Crear el caso en SharePoint", estado: "ok", detalle: [["Elemento", `#${idElemento}, creado con un ID temporal TMP-…`], ["ID Legalización", id, true]] });
+
+  const desde = new Date(fechaUtc.getTime() - DOMINIO.duplicados.diasVentana * 86400000);
+  const filtro = `Correo eq '${remitente.replace(/'/g, "''")}' and FechaRecepcion ge '${isoZ(desde)}' and ID ne ${idElemento} and Estado ne '${DOMINIO.duplicados.estadosExcluidos.join("' and Estado ne '")}'`;
+  const duplicados = Reglas.posiblesDuplicados(correo.adjuntos, remitente, fechaUtc, S.registro);
+  const aviso = duplicados.length ? Reglas.mensajeDuplicado(duplicados) : "";
+  pasos.push({ codigo: "E", nombre: "Buscar posibles duplicados", estado: duplicados.length ? "aviso" : "ok",
+    detalle: [["Consulta de filtro", filtro, true], ["Resultado", duplicados.length ? aviso : "Sin coincidencias"]] });
+
+  const guardados = v.soportados.map((nombre) => {
+    const archivo = { id, nombre: `${id}_${limpiarArchivo(nombre)}`, original: nombre, carpeta: rutaInicial };
+    S.biblioteca.push(archivo);
+    return `${archivo.carpeta}/${archivo.nombre}`;
+  });
+  pasos.push({ codigo: "F", nombre: "Guardar adjuntos y marcarlos con el ID", estado: "ok",
+    detalle: guardados.length ? guardados.map((g) => ["Archivo", g, true]) : [["Archivo", "Ninguno: no llegó ningún adjunto válido"]] });
+
+  const observaciones = [...v.hallazgos, ...(aviso ? [aviso] : [])].join("\n");
+  const caso = { idElemento, id, fechaUtc, local, colaborador: colab, correo: remitente, asunto, nombreArchivo: v.soportados.join("\n"),
+    estado: DOMINIO.caso.estadoInicial, observaciones, fechaCierre: null, adjuntos: v.soportados.slice() };
+  S.registro.push(caso);
+  pasos.push({ codigo: "G", nombre: "Completar el registro", estado: "ok", detalle: [["Estado", caso.estado], ["Nombre Archivo", caso.nombreArchivo || "(vacío)"], ["Observaciones", observaciones || "(vacío)"]] });
+
+  const listaArchivos = v.soportados.length ? `<ul><li>${v.soportados.map(esc).join("</li><li>")}</li></ul>` : "<p>(ninguno)</p>";
+  const hallazgosHtml = v.hallazgos.length ? `<ul><li>${v.hallazgos.map(esc).join("</li><li>")}</li></ul>` : "";
+  const enviados = [];
+  if (v.completa) {
+    enviados.push({ para: remitente, asunto: `Legalización recibida - ${id}`, tipo: "Al colaborador",
+      html: plantilla("recepcion-completa", { COLABORADOR: esc(colab), ID: id, FECHA: fmt(local), ARCHIVOS: listaArchivos, NOTAS: v.hallazgos.length ? `<p><b>Notas:</b></p>${hallazgosHtml}` : "" }) });
+  } else {
+    enviados.push({ para: remitente, asunto: `Legalización incompleta - ${id}`, tipo: "Al colaborador",
+      html: plantilla("recepcion-incompleta", { COLABORADOR: esc(colab), ID: id, FECHA: fmt(local), HALLAZGOS: hallazgosHtml, ARCHIVOS: listaArchivos }) });
+  }
+  if (duplicados.length) {
+    enviados.push({ para: CORREO_CONTABILIDAD, asunto: `[Legalizaciones] Posible duplicado - ${id}`, tipo: "Interno a Contabilidad",
+      html: plantilla("aviso-duplicado", { ID: id, COLABORADOR: esc(colab), CORREO: esc(remitente), FECHA: fmt(local), AVISO: esc(aviso), ENLACE: "#simulador" }) });
+  }
+  enviados.forEach((c) => S.correos.unshift({ ...c, cuando: local }));
+  pasos.push({ codigo: "H", nombre: "Enviar avisos", estado: "ok", detalle: enviados.map((c) => [c.tipo, `${c.asunto} → ${c.para}`]) });
+
+  ejecucion.caso = id;
+  ejecucion.resultado = duplicados.length ? "Correcta · posible duplicado" : v.completa ? "Correcta · completa" : "Correcta · incompleta";
+  ejecucion.clase = duplicados.length || !v.completa ? "st-pendiente" : "st-aprobada";
+  S.ejecuciones.unshift(ejecucion);
+  return ejecucion;
+}
+
+// ---------------------------------------------------------------- LEG-02 · Cierre (y cambios manuales de Contabilidad)
+function cambiarEstado(id, nuevoEstado, motivo) {
+  const caso = S.registro.find((c) => c.id === id);
+  if (!caso || !Reglas.transicionPermitida(caso.estado, nuevoEstado)) return;
+  if (motivo) caso.observaciones = caso.observaciones ? `${caso.observaciones}\n${motivo}` : motivo;
+  caso.estado = nuevoEstado;
+  if (!DOMINIO.caso.estadosFinales.includes(nuevoEstado) || caso.fechaCierre) return;
+
+  // Condición del desencadenador de LEG-02: estado final y sin Fecha Cierre.
+  const pasos = [];
+  const ahora = ahoraLocal($("#pais").value);
+  pasos.push({ codigo: "Disparo", nombre: "Condición de cierre", estado: "ok", detalle: [["Estado", nuevoEstado], ["Fecha Cierre", "vacía: se ejecuta"]] });
+  const destino = Reglas.rutaCarpeta(nuevoEstado, caso.local, caso.colaborador);
+  pasos.push({ codigo: "K1–K7", nombre: "Calcular la carpeta de destino", estado: "ok", detalle: [["Año y mes (del ID)", `${caso.id.substr(DOMINIO.caso.prefijoId.length + 1, 4)} / ${caso.id.substr(DOMINIO.caso.prefijoId.length + 5, 2)}`], ["Destino", `${BIBLIOTECA}/${destino}`, true]] });
+  const raizInicial = `/${DOMINIO.carpetas.raizPorEstado[DOMINIO.caso.estadoInicial]}/`;
+  const archivos = S.biblioteca.filter((a) => a.id === caso.id && a.carpeta.includes(raizInicial));
+  archivos.forEach((a) => { a.carpeta = `${BIBLIOTECA}/${destino}`; });
+  pasos.push({ codigo: "K8–K11", nombre: "Mover los archivos del caso", estado: "ok", detalle: archivos.length ? archivos.map((a) => ["Movido", `${a.carpeta}/${a.nombre}`, true]) : [["Archivos", "El caso no tiene archivos"]] });
+  caso.fechaCierre = ahora;
+  pasos.push({ codigo: "K12", nombre: "Registrar la Fecha Cierre", estado: "ok", detalle: [["Fecha Cierre", fmt(ahora)]] });
+  const visibles = Reglas.observacionesParaColaborador(caso.observaciones);
+  const html = plantilla(nuevoEstado === DOMINIO.caso.estadoAprobado ? "cierre-aprobada" : "cierre-rechazada", {
+    COLABORADOR: esc(caso.colaborador), ID: caso.id, FECHA_CIERRE: fmt(ahora),
+    OBSERVACIONES: visibles.length ? visibles.map(esc).join("<br>") : "(sin observaciones)" });
+  const asunto = `Legalización ${nuevoEstado.toLowerCase()} - ${caso.id}`;
+  S.correos.unshift({ para: caso.correo, asunto, tipo: "Al colaborador", html, cuando: ahora });
+  const internas = caso.observaciones.split("\n").filter((l) => l.trim().startsWith(DOMINIO.observaciones.prefijoNotaInterna)).length;
+  pasos.push({ codigo: "K13", nombre: "Avisar al colaborador", estado: "ok", detalle: [["Correo", `${asunto} → ${caso.correo}`], ["Notas internas omitidas", String(internas)]] });
+  S.ejecuciones.unshift({ flujo: "LEG-02", titulo: `${caso.id} · ${nuevoEstado}`, cuando: ahora, pasos, resultado: "Correcta", clase: claseEstado(nuevoEstado), caso: caso.id });
+}
+
+// ---------------------------------------------------------------- Excel (Power Query)
+function analisis() {
+  const lineas = [], errores = [], alertas = [];
+  const ahora = Date.now();
+  for (const caso of S.registro) {
+    for (const nombre of caso.adjuntos) {
+      if (Reglas.tipoDocumento(nombre) !== "comprobante") continue;
+      const info = ARCHIVOS[nombre] || {};
+      if (info.lineas) info.lineas.forEach((l) => lineas.push({ caso, ...l }));
+      else errores.push({ caso, archivo: `${caso.id}_${nombre}` });
+    }
+  }
+  const idsConLineas = new Set(lineas.map((l) => l.caso.id));
+  for (const caso of S.registro) {
+    const abierto = DOMINIO.caso.estadosAbiertos.includes(caso.estado);
+    const dias = Math.floor((ahora - caso.fechaUtc.getTime()) / 86400000);
+    if (abierto && dias > DOMINIO.analisis.diasAlertaCasoAbierto) alertas.push(["Caso abierto hace más de " + DOMINIO.analisis.diasAlertaCasoAbierto + " días", caso, `${caso.estado} desde hace ${dias} días`]);
+    if (abierto && caso.observaciones.includes(DOMINIO.mensajes.posibleDuplicado.split("{")[0].trim())) alertas.push(["Posible duplicado sin resolver", caso, "Confirmar antes de aprobar"]);
+    if (caso.estado === DOMINIO.caso.estadoAprobado && !idsConLineas.has(caso.id)) alertas.push(["Aprobada sin comprobante legible", caso, "No hay líneas para cargar a Operam"]);
+  }
+  errores.forEach((e) => alertas.push(["Comprobante ilegible", e.caso, `${e.archivo}: no usa la plantilla`]));
+  const consolidado = lineas.filter((l) => l.caso.estado === DOMINIO.caso.estadoAprobado && !S.control.has(l.caso.id));
+  return { lineas, errores, alertas, consolidado };
+}
+
+// ---------------------------------------------------------------- Interfaz
+function renderAdjuntosFormulario(seleccion) {
+  const todos = [...Object.keys(ARCHIVOS), ...S.adjuntosExtra];
+  $("#listaAdjuntos").innerHTML = todos.map((n, i) => {
+    const info = ARCHIVOS[n];
+    const tipo = Reglas.tipoDocumento(n);
+    const ayuda = info ? info.ayuda : (tipo ? tipo : "no válido");
+    return `<label class="adjunto"><input type="checkbox" id="adj-${i}" value="${esc(n)}"${seleccion.includes(n) ? " checked" : ""}> ${esc(n)} <small>${esc(ayuda)}</small></label>`;
+  }).join("");
+}
+function llenarFormulario(escenario) {
+  $("#remitente").value = escenario.remitente;
+  $("#asunto").value = escenario.asunto;
+  $("#llegada").value = aInput(ahoraLocal($("#pais").value));
+  renderAdjuntosFormulario(escenario.adjuntos);
+}
+function leerFormulario() {
+  return {
+    remitente: $("#remitente").value || "sin.remitente@ejemplo.com",
+    asunto: $("#asunto").value,
+    pais: $("#pais").value,
+    llegadaLocal: deInput($("#llegada").value) || ahoraLocal($("#pais").value),
+    adjuntos: [...document.querySelectorAll("#listaAdjuntos input:checked")].map((c) => c.value)
+  };
+}
+
+function renderEjecuciones() {
+  const panel = $("#panel-ejecuciones");
+  if (!S.ejecuciones.length) { panel.innerHTML = '<p class="vacio">Todavía no hay ejecuciones. Envíe un correo o elija un escenario.</p>'; return; }
+  panel.innerHTML = S.ejecuciones.map((e, i) => `
+    <details class="ejecucion${i === 0 ? " nueva" : ""}"${i === 0 ? " open" : ""}>
+      <summary><span class="flujo">${e.flujo}</span><span class="titulo">${esc(e.titulo)}</span><span class="cuando">${fmt(e.cuando)}</span><span class="pill ${e.clase}">${esc(e.resultado)}</span></summary>
+      <ol class="pasos">${e.pasos.map((p) => `
+        <li class="paso"><span class="icono ${p.estado}" aria-hidden="true">${p.estado === "ok" ? "✓" : p.estado === "aviso" ? "!" : "–"}</span>
+          <div><h4><span class="codigo">${esc(p.codigo)}</span>${esc(p.nombre)}</h4>
+          <dl>${p.detalle.map(([k, v, mono]) => `<dt>${esc(k)}</dt><dd${mono ? ' class="mono"' : ""}>${esc(v)}</dd>`).join("")}</dl></div></li>`).join("")}
+      </ol>
+    </details>`).join("");
+}
+
+function renderSharePoint() {
+  const panel = $("#panel-sharepoint");
+  const filas = S.registro.slice().reverse().map((c) => {
+    const abierto = DOMINIO.caso.estadosAbiertos.includes(c.estado);
+    const acciones = abierto ? `<div class="acciones">
+        ${c.estado === "Pendiente" ? `<button type="button" class="chico" data-accion="revision" data-id="${c.id}">En revisión</button>` : ""}
+        <button type="button" class="chico ok-btn" data-accion="aprobar" data-id="${c.id}">Aprobar</button>
+        <button type="button" class="chico mal-btn" data-accion="rechazar" data-id="${c.id}">Rechazar</button>
+      </div>
+      <div class="rechazo" id="rechazo-${c.id}" hidden>
+        <input type="text" id="motivo-${c.id}" placeholder="Motivo (se envía al colaborador)" aria-label="Motivo del rechazo de ${c.id}">
+        <button type="button" class="chico mal-btn" data-accion="confirmar-rechazo" data-id="${c.id}">Confirmar rechazo</button>
+      </div>` : '<span class="vacio">Cerrado</span>';
+    return `<tr><td class="id">${c.id}</td><td>${fmt(c.local)}</td><td>${esc(c.colaborador)}</td><td>${esc(c.correo)}</td>
+      <td><div class="multilinea mono">${esc(c.nombreArchivo) || "—"}</div></td><td>${sello(c.estado)}</td>
+      <td><div class="multilinea">${esc(c.observaciones) || "—"}</div></td><td>${c.fechaCierre ? fmt(c.fechaCierre) : "—"}</td><td>${acciones}</td></tr>`;
+  }).join("");
+  const carpetas = {};
+  for (const a of S.biblioteca) (carpetas[a.carpeta] = carpetas[a.carpeta] || []).push(a);
+  const arbol = Object.keys(carpetas).sort().map((ruta) => `<div class="carpeta"><div class="ruta">${esc(ruta)}</div><ul>${carpetas[ruta].map((a) => `<li>${esc(a.nombre)} <span>· ID Legalización ${a.id}</span></li>`).join("")}</ul></div>`).join("");
+  panel.innerHTML = `
+    <div class="hoja"><h3>Lista Registro_Legalizaciones_TC <span class="mono">vista Todos los elementos</span></h3>
+      ${S.registro.length ? `<div class="tabla"><table><thead><tr><th>ID Legalización</th><th>Fecha Recepción</th><th>Colaborador</th><th>Correo</th><th>Nombre Archivo</th><th>Estado</th><th>Observaciones</th><th>Fecha Cierre</th><th>Contabilidad</th></tr></thead><tbody>${filas}</tbody></table></div>` : '<p class="vacio">La lista está vacía.</p>'}
+      <p class="vacio">Pruebe <b>Aprobar</b> o <b>Rechazar</b>: es lo que hace Contabilidad. Luego vea la ejecución de LEG-02 y los archivos movidos.</p></div>
+    <div class="hoja"><h3>Biblioteca Legalizaciones_TC</h3>${arbol ? `<div class="arbol">${arbol}</div>` : '<p class="vacio">Sin archivos.</p>'}</div>`;
+}
+
+function renderCorreos() {
+  const panel = $("#panel-correos");
+  panel.innerHTML = S.correos.length ? S.correos.map((c) => `
+    <article class="mensaje"><div class="sobre"><span><b>Para:</b> ${esc(c.para)}</span><span><b>Asunto:</b> ${esc(c.asunto)}</span><span class="vacio">${esc(c.tipo)} · ${fmt(c.cuando)}</span></div>
+      <div class="papel">${c.html}</div></article>`).join("") : '<p class="vacio">Todavía no se envió ningún correo.</p>';
+}
+
+function renderExcel() {
+  const a = analisis();
+  const cuenta = (estado) => S.registro.filter((c) => c.estado === estado).length;
+  const panel = $("#panel-excel");
+  const filasConsolidado = a.consolidado.map((l) => `<tr><td class="id">${l.caso.id}</td><td>${esc(l.caso.colaborador)}</td><td>${l.fecha}</td><td>${l.factura}</td><td>${esc(l.proveedor)}</td><td>${esc(l.concepto)}</td><td class="num">${dinero(l.subtotal)}</td><td class="num">${dinero(l.iva)}</td><td class="num">${dinero(l.total)}</td></tr>`).join("");
+  const casosPorCargar = [...new Set(a.consolidado.map((l) => l.caso.id))];
+  panel.innerHTML = `
+    <div class="hoja"><h3>Resumen</h3><div class="kpis">
+      ${DOMINIO.caso.estados.map((e) => `<div class="kpi"><b>${cuenta(e)}</b><span>${sello(e)}</span></div>`).join("")}
+      <div class="kpi"><b>${a.alertas.length}</b><span>Alertas</span></div></div></div>
+    <div class="hoja"><h3>Alertas</h3>${a.alertas.length ? `<div class="tabla"><table><thead><tr><th>Alerta</th><th>ID Legalización</th><th>Colaborador</th><th>Detalle</th></tr></thead><tbody>${a.alertas.map(([t, c, d]) => `<tr><td>${esc(t)}</td><td class="id">${c.id}</td><td>${esc(c.colaborador)}</td><td>${esc(d)}</td></tr>`).join("")}</tbody></table></div>` : '<p class="vacio">Sin alertas.</p>'}</div>
+    <div class="hoja"><h3>Consolidado_Operam <span class="mono">aprobados que faltan cargar</span></h3>
+      ${a.consolidado.length ? `<div class="tabla"><table><thead><tr><th>ID Legalización</th><th>Colaborador</th><th>Fecha</th><th>Factura</th><th>Proveedor</th><th>Concepto</th><th>Subtotal</th><th>IVA</th><th>Total</th></tr></thead><tbody>${filasConsolidado}</tbody></table></div>
+        <div class="fila">${casosPorCargar.map((id) => `<button type="button" class="chico" data-accion="cargar" data-id="${id}">Ya cargué ${id} en Operam</button>`).join("")}</div>` : '<p class="vacio">No hay gastos aprobados pendientes de cargar. Apruebe un caso completo en la pestaña SharePoint.</p>'}</div>
+    <div class="hoja"><h3>Control_Operam <span class="mono">registro manual de cargas</span></h3>${S.control.size ? `<p class="mono">${[...S.control].join(", ")}</p>` : '<p class="vacio">Vacío.</p>'}</div>`;
+}
+
+function renderTodo() {
+  renderEjecuciones(); renderSharePoint(); renderCorreos(); renderExcel();
+  $("#c-ejecuciones").textContent = S.ejecuciones.length || "";
+  $("#c-sharepoint").textContent = S.registro.length || "";
+  $("#c-correos").textContent = S.correos.length || "";
+  $("#c-excel").textContent = analisis().alertas.length ? `${analisis().alertas.length}!` : "";
+}
+
+function mostrarPestana(nombre) {
+  for (const t of ["ejecuciones", "sharepoint", "correos", "excel"]) {
+    $(`#tab-${t}`).setAttribute("aria-selected", String(t === nombre));
+    $(`#panel-${t}`).hidden = t !== nombre;
+  }
+}
+
+function sembrarEjemplos() {
+  const pais = $("#pais").value;
+  const hace = (horas) => new Date(ahoraLocal(pais).getTime() - horas * 3600000);
+  for (const [idEsc, horas] of [["E01", 50], ["E03", 26], ["E10", 3]]) {
+    const e = ESCENARIOS.find((x) => x.id === idEsc);
+    ejecutarLeg01({ ...e, pais, llegadaLocal: hace(horas) });
+  }
+}
+
+let guiando = false;
+async function recorridoGuiado() {
+  if (guiando) return;
+  guiando = true;
+  $("#btnGuiado").disabled = true;
+  const pausa = (ms) => new Promise((r) => setTimeout(r, ms));
+  const narrar = (texto) => { const n = $("#narracion"); n.hidden = false; n.textContent = texto; };
+  const pais = $("#pais").value;
+  S = estadoInicial(); renderAdjuntosFormulario([]); renderTodo();
+  const pasos = [
+    ["1 de 6 · Ana envía una legalización completa: LEG-01 crea el caso, guarda los dos archivos y le confirma la recepción.", () => { ejecutarLeg01({ ...ESCENARIOS[0], pais, llegadaLocal: ahoraLocal(pais) }); mostrarPestana("ejecuciones"); }],
+    ["2 de 6 · Luis olvida el comprobante: el caso queda Pendiente y él recibe un correo que dice exactamente qué falta.", () => { ejecutarLeg01({ ...ESCENARIOS[1], pais, llegadaLocal: ahoraLocal(pais) }); mostrarPestana("correos"); }],
+    ["3 de 6 · María manda la factura como foto: la imagen no se guarda y se informa como formato no válido.", () => { ejecutarLeg01({ ...ESCENARIOS[2], pais, llegadaLocal: ahoraLocal(pais) }); mostrarPestana("ejecuciones"); }],
+    ["4 de 6 · Ana reenvía el mismo correo: se registra, pero Contabilidad recibe un aviso interno de posible duplicado.", () => { ejecutarLeg01({ ...ESCENARIOS[5], pais, llegadaLocal: ahoraLocal(pais) }); mostrarPestana("ejecuciones"); }],
+    ["5 de 6 · Contabilidad aprueba el primer caso de Ana: LEG-02 mueve los archivos a Aprobadas, registra la fecha y le avisa.", () => { cambiarEstado(S.registro[0].id, "Aprobada", ""); mostrarPestana("sharepoint"); }],
+    ["6 de 6 · En Excel aparecen los gastos aprobados listos para Operam y las alertas (el duplicado y el caso incompleto).", () => { mostrarPestana("excel"); }]
+  ];
+  const reducido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  for (const [texto, accion] of pasos) {
+    narrar(texto); accion(); renderTodo();
+    await pausa(reducido ? 2600 : 3200);
+  }
+  narrar("Listo. Ahora pruebe usted: elija un escenario, cambie el asunto o los adjuntos y envíe el correo.");
+  guiando = false;
+  $("#btnGuiado").disabled = false;
+}
+
+function iniciar() {
+  const v = verificarReglas();
+  const verif = $("#verificacion");
+  if (v.fallas.length) {
+    verif.classList.add("mal");
+    verif.textContent = `${v.fallas.length} de ${v.total} ejemplos del dominio no coinciden: ${v.fallas.map((f) => f[0]).join("; ")}`;
+  } else {
+    verif.textContent = `✓ Las reglas del simulador reproducen los ${v.total} ejemplos de las pruebas del dominio`;
+  }
+  if (META) {
+    const texto = `Pruebas automáticas: ${META.pester + META.python} pasan (${META.pester} Pester + ${META.python} Python)`;
+    $("#notaPruebas").textContent = texto;
+    $("#totalPruebas").textContent = texto;
+    $("#pie").textContent = `Página generada el ${META.generado} desde dominio.json v${DOMINIO.version} y las plantillas de correo del proyecto.`;
+  }
+  S = estadoInicial();
+  $("#escenarios").innerHTML = ESCENARIOS.map((e) => `<button type="button" class="chico" data-escenario="${e.id}">${e.id} · ${esc(e.etiqueta)}</button>`).join("");
+  llenarFormulario(ESCENARIOS[0]);
+  sembrarEjemplos();
+  renderTodo();
+
+  $("#escenarios").addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-escenario]");
+    if (b) llenarFormulario(ESCENARIOS.find((e) => e.id === b.dataset.escenario));
+  });
+  $("#formCorreo").addEventListener("submit", (ev) => {
+    ev.preventDefault();
+    ejecutarLeg01(leerFormulario());
+    renderTodo();
+    mostrarPestana("ejecuciones");
+  });
+  $("#btnAgregarArchivo").addEventListener("click", () => {
+    const nombre = $("#otroArchivo").value.trim();
+    if (!nombre) return;
+    const seleccion = [...document.querySelectorAll("#listaAdjuntos input:checked")].map((c) => c.value);
+    if (!ARCHIVOS[nombre] && !S.adjuntosExtra.includes(nombre)) S.adjuntosExtra.push(nombre);
+    renderAdjuntosFormulario([...seleccion, nombre]);
+    $("#otroArchivo").value = "";
+  });
+  $("#pais").addEventListener("change", () => { $("#llegada").value = aInput(ahoraLocal($("#pais").value)); });
+  document.querySelector(".pestanas").addEventListener("click", (ev) => {
+    const b = ev.target.closest('[role="tab"]');
+    if (b) mostrarPestana(b.id.replace("tab-", ""));
+  });
+  document.querySelector(".vistas").addEventListener("click", (ev) => {
+    const b = ev.target.closest("[data-accion]");
+    if (!b) return;
+    const id = b.dataset.id;
+    if (b.dataset.accion === "rechazar") { const r = document.getElementById(`rechazo-${id}`); r.hidden = !r.hidden; if (!r.hidden) document.getElementById(`motivo-${id}`).focus(); return; }
+    if (b.dataset.accion === "revision") cambiarEstado(id, "En revisión", "");
+    if (b.dataset.accion === "aprobar") cambiarEstado(id, "Aprobada", "");
+    if (b.dataset.accion === "confirmar-rechazo") cambiarEstado(id, "Rechazada", document.getElementById(`motivo-${id}`).value.trim() || "Rechazada por Contabilidad.");
+    if (b.dataset.accion === "cargar") S.control.add(id);
+    renderTodo();
+  });
+  $("#btnGuiado").addEventListener("click", recorridoGuiado);
+  $("#btnReiniciar").addEventListener("click", () => { S = estadoInicial(); renderAdjuntosFormulario([]); $("#narracion").hidden = true; renderTodo(); mostrarPestana("ejecuciones"); });
+}
+iniciar();
+</script>

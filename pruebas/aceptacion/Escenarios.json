@@ -1,0 +1,102 @@
+{
+  "descripcion": "Escenarios de prueba de aceptación de punta a punta (correo -> Power Automate -> SharePoint -> Excel). Los usan Enviar-CorreosPrueba.ps1 (envía los correos) y Validar-Escenarios.ps1 (revisa el resultado en SharePoint). Cada asunto lleva la etiqueta 'Prueba <id>' para encontrar su caso. Ver pruebas/PLAN-DE-PRUEBAS.md.",
+  "escenarios": [
+    {
+      "id": "E01",
+      "nombre": "Legalización completa (factura PDF + comprobante Excel)",
+      "asunto": "Legalización Tarjeta Crédito - Prueba E01",
+      "adjuntos": ["factura_A001.pdf", "Gastos_Quincena.xlsx"],
+      "esperado": { "registro": true, "estado": "Pendiente", "observacionesVacias": true, "archivosGuardados": 2, "carpeta": "Pendientes", "correo": "Legalización recibida" }
+    },
+    {
+      "id": "E02",
+      "nombre": "Completa con XML (CFDI)",
+      "asunto": "Legalización Tarjeta Crédito - Prueba E02",
+      "adjuntos": ["factura_A002.pdf", "Gastos_Quincena.xlsx", "cfdi_A001.xml"],
+      "esperado": { "registro": true, "estado": "Pendiente", "observacionesVacias": true, "archivosGuardados": 3, "carpeta": "Pendientes", "correo": "Legalización recibida" }
+    },
+    {
+      "id": "E03",
+      "nombre": "Incompleta: falta el comprobante",
+      "asunto": "Legalización Tarjeta Crédito - Prueba E03",
+      "adjuntos": ["factura_B100.pdf"],
+      "esperado": { "registro": true, "estado": "Pendiente", "observacionesContienen": ["Falta el comprobante quincenal"], "archivosGuardados": 1, "carpeta": "Pendientes", "correo": "Legalización incompleta" }
+    },
+    {
+      "id": "E04",
+      "nombre": "Incompleta: falta la factura",
+      "asunto": "Legalización Tarjeta Crédito - Prueba E04",
+      "adjuntos": ["Gastos_Quincena.xlsx"],
+      "esperado": { "registro": true, "estado": "Pendiente", "observacionesContienen": ["Falta la factura en PDF"], "archivosGuardados": 1, "carpeta": "Pendientes", "correo": "Legalización incompleta" }
+    },
+    {
+      "id": "E05",
+      "nombre": "Sin adjuntos",
+      "asunto": "Legalización Tarjeta Crédito - Prueba E05",
+      "adjuntos": [],
+      "esperado": { "registro": true, "estado": "Pendiente", "observacionesContienen": ["Falta la factura en PDF", "Falta el comprobante quincenal"], "archivosGuardados": 0, "correo": "Legalización incompleta" }
+    },
+    {
+      "id": "E06",
+      "nombre": "Formato no soportado: factura enviada como imagen",
+      "asunto": "Legalización Tarjeta Crédito - Prueba E06",
+      "adjuntos": ["factura_foto.png", "Gastos_Quincena.xlsx"],
+      "esperado": { "registro": true, "estado": "Pendiente", "observacionesContienen": ["Falta la factura en PDF", "factura_foto.png"], "archivosGuardados": 1, "carpeta": "Pendientes", "correo": "Legalización incompleta" }
+    },
+    {
+      "id": "E07",
+      "nombre": "Completa con un archivo adicional no soportado (.xls)",
+      "asunto": "Legalización Tarjeta Crédito - Prueba E07",
+      "adjuntos": ["factura_C200.pdf", "Gastos_Quincena.xlsx", "Gastos_Antiguo.xls"],
+      "esperado": { "registro": true, "estado": "Pendiente", "observacionesContienen": ["Gastos_Antiguo.xls"], "archivosGuardados": 2, "carpeta": "Pendientes", "correo": "Legalización recibida" }
+    },
+    {
+      "id": "E08",
+      "nombre": "Asunto sin el nombre del colaborador",
+      "asunto": "Legalización Tarjeta Crédito [Prueba E08]",
+      "adjuntos": ["factura_C201.pdf", "Gastos_Quincena.xlsx"],
+      "esperado": { "registro": true, "estado": "Pendiente", "observacionesContienen": ["El asunto no trae el nombre del colaborador"], "archivosGuardados": 2, "carpeta": "Pendientes", "correo": "Legalización recibida" }
+    },
+    {
+      "id": "E09",
+      "nombre": "Correo que no es una legalización (no debe procesarse)",
+      "asunto": "Consulta sobre la tarjeta corporativa [Prueba E09]",
+      "adjuntos": ["factura_C202.pdf"],
+      "esperado": { "registro": false }
+    },
+    {
+      "id": "E10",
+      "nombre": "Posible duplicado: reenvío de la factura de E01",
+      "asunto": "Legalización Tarjeta Crédito - Prueba E10",
+      "adjuntos": ["factura_A001.pdf", "Gastos_Quincena.xlsx"],
+      "esperado": { "registro": true, "estado": "Pendiente", "observacionesContienen": ["Posible duplicado de"], "duplicadoDe": "E01", "archivosGuardados": 2, "carpeta": "Pendientes", "correo": "Legalización recibida + aviso interno a Contabilidad" }
+    },
+    {
+      "id": "E14",
+      "nombre": "Comprobante sin la plantilla (se registra; Excel lo marca como ilegible)",
+      "asunto": "Legalización Tarjeta Crédito - Prueba E14",
+      "adjuntos": ["factura_C202.pdf", "Gastos_Formato_Libre.xlsx"],
+      "esperado": { "registro": true, "estado": "Pendiente", "observacionesVacias": true, "archivosGuardados": 2, "carpeta": "Pendientes", "correo": "Legalización recibida", "excel": "Aparece en Errores_Lectura y en Alertas (Comprobante ilegible)" }
+    },
+    {
+      "id": "E11",
+      "nombre": "Volumen: 15 legalizaciones seguidas el mismo día",
+      "volumen": { "cantidad": 15, "asunto": "Legalización Tarjeta Crédito - Prueba V{nn}", "adjuntos": ["factura_V{nn}.pdf", "Gastos_Quincena.xlsx"] },
+      "esperado": { "registro": true, "estado": "Pendiente", "observacionesVacias": true, "archivosGuardados": 2, "carpeta": "Pendientes", "idsUnicos": true }
+    },
+    {
+      "id": "E12",
+      "nombre": "Cierre como Aprobada (flujo LEG-02)",
+      "manual": "En SharePoint cambie el Estado del caso de 'Prueba E01' a Aprobada y guarde. Espere 1 a 2 minutos.",
+      "casoDe": "E01",
+      "esperado": { "registro": true, "estado": "Aprobada", "fechaCierre": true, "archivosGuardados": 2, "carpeta": "Aprobadas", "correo": "Legalización aprobada" }
+    },
+    {
+      "id": "E13",
+      "nombre": "Cierre como Rechazada (flujo LEG-02)",
+      "manual": "En SharePoint escriba un motivo en Observaciones del caso de 'Prueba E03', cambie su Estado a Rechazada y guarde. Espere 1 a 2 minutos.",
+      "casoDe": "E03",
+      "esperado": { "registro": true, "estado": "Rechazada", "fechaCierre": true, "archivosGuardados": 1, "carpeta": "Rechazadas", "correo": "Legalización rechazada" }
+    }
+  ]
+}

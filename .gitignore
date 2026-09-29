@@ -1,0 +1,11 @@
+# Registros de ejecución de los scripts
+logs/
+# Datos de prueba (se generan con pruebas/aceptacion/generar_datos_prueba.py)
+pruebas/datos/
+# Configuración de los flujos generada (contiene correos del entorno)
+salida/Configuracion-Flujos*.json
+# Python
+__pycache__/
+*.pyc
+# Archivos temporales de Office
+~$*

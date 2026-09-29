@@ -1,0 +1,10 @@
+# Los .cmd necesitan CRLF para que Windows los ejecute bien; el resto del proyecto usa LF.
+# Así se conservan igual al clonar (con cualquier configuración de Git) y con "Download ZIP".
+* text=auto eol=lf
+*.cmd text eol=crlf
+
+# Archivos binarios (no se convierten)
+*.xlsx binary
+*.xls  binary
+*.pdf  binary
+*.png  binary

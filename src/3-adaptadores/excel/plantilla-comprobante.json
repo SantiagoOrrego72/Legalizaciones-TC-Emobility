@@ -1,0 +1,29 @@
+{
+  "descripcion": "Contrato de la plantilla del comprobante quincenal que envía el colaborador. Lo usan el generador de la plantilla (Python) y la consulta fnLeerComprobante (Power Query). Cambiar una columna aquí obliga a regenerar ambos.",
+  "nombreArchivo": "Plantilla_Comprobante_Quincenal.xlsx",
+  "hoja": "Gastos",
+  "tabla": "tblGastos",
+  "filaEncabezado": 7,
+  "encabezado": {
+    "titulo": "Comprobante quincenal de gastos · Tarjeta corporativa",
+    "campos": [
+      { "etiqueta": "Colaborador", "nombreDefinido": "Colaborador" },
+      { "etiqueta": "Quincena (ej. 2026-09 Q1)", "nombreDefinido": "Quincena" }
+    ],
+    "instrucciones": "Una fila por factura. No cambie los títulos de las columnas ni el nombre de la tabla. Envíe este archivo en formato .xlsx junto con las facturas en PDF."
+  },
+  "columnas": [
+    { "nombre": "Fecha", "tipo": "fecha", "ancho": 12, "ayuda": "Fecha de la factura (dd/mm/aaaa)." },
+    { "nombre": "Número Factura", "tipo": "texto", "ancho": 16, "ayuda": "Serie y folio de la factura." },
+    { "nombre": "Proveedor", "tipo": "texto", "ancho": 28, "ayuda": "Razón social del proveedor." },
+    { "nombre": "Id Fiscal Proveedor", "tipo": "texto", "ancho": 18, "ayuda": "RFC (México) o NIT (Colombia) del proveedor." },
+    { "nombre": "Concepto", "tipo": "texto", "ancho": 30, "ayuda": "Qué se compró y para qué." },
+    { "nombre": "Centro de Costo", "tipo": "texto", "ancho": 16, "ayuda": "Centro de costo al que se carga el gasto." },
+    { "nombre": "Subtotal", "tipo": "numero", "ancho": 12, "ayuda": "Importe antes de impuestos." },
+    { "nombre": "IVA", "tipo": "numero", "ancho": 10, "ayuda": "Impuesto trasladado." },
+    { "nombre": "Total", "tipo": "numero", "ancho": 12, "ayuda": "Importe total de la factura (Subtotal + IVA)." },
+    { "nombre": "Moneda", "tipo": "lista", "opciones": ["MXN", "COP", "USD", "EUR"], "ancho": 9, "ayuda": "Moneda de la factura." },
+    { "nombre": "Folio Fiscal", "tipo": "texto", "ancho": 38, "ayuda": "UUID del CFDI (México) o CUFE (Colombia), si aplica." }
+  ],
+  "filasPreparadas": 40
+}
