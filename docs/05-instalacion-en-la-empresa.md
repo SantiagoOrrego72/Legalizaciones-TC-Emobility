@@ -66,7 +66,7 @@ Esto hace que el sistema funcione de forma profesional y sin depender de una per
 
 ## Cómo llevar el proyecto al equipo de la empresa
 
-1. Descargue el proyecto al equipo de TI desde el [repositorio de GitHub](https://github.com/SantiagoOrrego72/Legalizaciones-TC-Emobility), que es privado (pida acceso a quien lo administra):
+1. Descargue el proyecto al equipo de TI desde el [repositorio de GitHub](https://github.com/SantiagoOrrego72/Legalizaciones-TC-Emobility):
    - con Git: `git clone https://github.com/SantiagoOrrego72/Legalizaciones-TC-Emobility.git`;
    - sin Git: **Code › Download ZIP** y descomprímalo.
 
@@ -90,7 +90,7 @@ Si la empresa usa proxy o firewall, el equipo de TI necesita salida HTTPS (puert
 | `graph.microsoft.com` | PnP PowerShell |
 | `make.powerautomate.com` | Construir los flujos |
 | `www.powershellgallery.com` | Instalar PnP.PowerShell y Pester (solo la primera vez) |
-| `github.com` | Solo si se instala la versión portátil de PowerShell 7 |
+| `github.com` | Descargar el proyecto y, si se usa, la versión portátil de PowerShell 7 |
 
 `Diagnosticar-Equipo.cmd` comprueba estos accesos, usando el proxy configurado en Windows.
 

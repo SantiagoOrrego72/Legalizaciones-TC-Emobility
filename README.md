@@ -57,7 +57,7 @@ Complete la sección 1 de [`QUE-DEBO-HACER.md`](QUE-DEBO-HACER.md): tenant, corr
 ### Fase 1 · Preparar el equipo de administración de la empresa (15 minutos)
 El sistema corre en Microsoft 365, no en un computador. El equipo de la empresa solo se usa para instalarlo y mantenerlo. Qué va en cada lugar: [`docs/05-instalacion-en-la-empresa.md`](docs/05-instalacion-en-la-empresa.md).
 
-1. Descargue el proyecto al equipo de TI desde el [repositorio de GitHub](https://github.com/SantiagoOrrego72/Legalizaciones-TC-Emobility) (es privado: pida acceso) y desbloquee los archivos: `Get-ChildItem -Recurse | Unblock-File`.
+1. Descargue el proyecto al equipo de TI desde el [repositorio de GitHub](https://github.com/SantiagoOrrego72/Legalizaciones-TC-Emobility) y desbloquee los archivos: `Get-ChildItem -Recurse | Unblock-File`.
    - con Git: `git clone https://github.com/SantiagoOrrego72/Legalizaciones-TC-Emobility.git`;
    - sin Git: **Code › Download ZIP** y descomprímalo.
 2. Doble clic en **`Diagnosticar-Equipo.cmd`**. Muestra qué está bien y qué falta.
